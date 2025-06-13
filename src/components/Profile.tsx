@@ -6,6 +6,10 @@ import { FirebaseError } from 'firebase/app';
 import { auth, googleProvider, facebookProvider, linkWithPopup } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import UserProfileDisplay from './UserProfileDisplay';
+import UserProfileForm from './UserProfileForm';
+import { UserProfileForm as UserProfileFormType } from '@/types/user';
 
 interface ProfileProps {
   user: User;
@@ -13,10 +17,13 @@ interface ProfileProps {
 
 const Profile: React.FC<ProfileProps> = ({ user }) => {
   const [message, setMessage] = useState<string>('');
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const { userProfile, loading, error, updateProfileData, createProfile } = useUserProfile(user);
 
   const isProviderLinked = (providerId: string): boolean => {
     return user.providerData.some(provider => provider.providerId === providerId);
   };
+
   const handleLinkProvider = async (provider: AuthProvider) => {
     try {
       await linkWithPopup(user, provider);
@@ -32,22 +39,81 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
     } catch (err) {
       setMessage(`Error al cerrar sesión: ${(err as FirebaseError).message}`);
     }
+  };  const handleProfileUpdate = async (profileData: UserProfileFormType) => {
+    try {
+      if (userProfile) {
+        // Si ya existe un perfil, actualizarlo
+        await updateProfileData(profileData);
+        setMessage('¡Perfil actualizado correctamente!');
+      } else {
+        // Si no existe, crear uno nuevo
+        await createProfile(profileData);
+        setMessage('¡Perfil creado correctamente!');
+      }
+      setIsEditing(false);
+    } catch {
+      setMessage('Error al guardar el perfil');
+    }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Cargando perfil...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg text-red-600">Error: {error}</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center text-gray-900">
-            Bienvenido
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="text-center">
-            <p className="text-gray-700 mb-4">
-              <strong>{user.email}</strong>
-            </p>
-            
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto space-y-8">
+        
+        {/* Perfil del Usuario */}
+        <div>
+          {userProfile && !isEditing ? (
+            <UserProfileDisplay 
+              userProfile={userProfile} 
+              onEdit={() => setIsEditing(true)} 
+            />
+          ) : (
+            <UserProfileForm
+              initialData={{
+                address: userProfile?.address || '',
+                birthDate: userProfile?.birthDate || ''
+              }}
+              onSubmit={handleProfileUpdate}
+              loading={loading}
+            />
+          )}
+          
+          {isEditing && (
+            <div className="flex justify-center mt-4">
+              <Button 
+                onClick={() => setIsEditing(false)} 
+                variant="outline"
+              >
+                Cancelar
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Configuración de Autenticación */}
+        <Card className="w-full max-w-md mx-auto">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold text-center">
+              Configuración de Cuenta
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
             <div className="mb-6">
               <h3 className="text-lg font-medium text-gray-900 mb-2">
                 Proveedores vinculados:
@@ -96,9 +162,9 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
                 </p>
               </div>
             )}
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
