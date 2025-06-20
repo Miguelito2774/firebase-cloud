@@ -6,6 +6,8 @@ import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Label } from './ui/label';
+import { ImageUpload } from './ImageUpload';
+import { StorageService } from '../lib/storageService';
 import type { CreatePostData } from '../types/post';
 
 interface CreatePostFormProps {
@@ -16,7 +18,25 @@ interface CreatePostFormProps {
 export function CreatePostForm({ onSubmit, loading = false }: CreatePostFormProps) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
+  
+  const storageService = new StorageService();
+
+  const handleImageSelect = (file: File | null) => {
+    setSelectedImage(file);
+    setImageError(null);
+    
+    // Validar imagen si se selecciona una
+    if (file) {
+      const validation = storageService.validateImageFile(file);
+      if (!validation.isValid) {
+        setImageError(validation.error || 'Error en la imagen');
+        setSelectedImage(null);
+      }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,11 +46,15 @@ export function CreatePostForm({ onSubmit, loading = false }: CreatePostFormProp
     }
 
     setIsSubmitting(true);
-    const success = await onSubmit({ title: title.trim(), content: content.trim() });
-    
-    if (success) {
+    const success = await onSubmit({ 
+      title: title.trim(), 
+      content: content.trim(),
+      image: selectedImage || undefined
+    });
+      if (success) {
       setTitle('');
       setContent('');
+      setSelectedImage(null);
     }
     
     setIsSubmitting(false);
@@ -55,8 +79,7 @@ export function CreatePostForm({ onSubmit, loading = false }: CreatePostFormProp
               disabled={isSubmitting}
             />
           </div>
-          
-          <div className="space-y-2">
+            <div className="space-y-2">
             <Label htmlFor="content">Contenido</Label>
             <Textarea
               id="content"
@@ -67,6 +90,18 @@ export function CreatePostForm({ onSubmit, loading = false }: CreatePostFormProp
               rows={5}
             />
           </div>
+          
+          <ImageUpload
+            onImageSelect={handleImageSelect}
+            selectedImage={selectedImage}
+            loading={isSubmitting}
+          />
+          
+          {imageError && (
+            <div className="text-sm text-red-600">
+              {imageError}
+            </div>
+          )}
           
           <Button 
             type="submit" 
