@@ -11,6 +11,8 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import UserProfileDisplay from './UserProfileDisplay';
 import UserProfileForm from './UserProfileForm';
 import { PostsComponent } from './PostsComponent';
+import { NotificationCenter } from './NotificationCenter';
+import { PublicFeed } from './PublicFeed';
 import { UserProfileForm as UserProfileFormType } from '@/types/user';
 
 interface ProfileProps {
@@ -72,15 +74,19 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
         <div className="text-lg text-red-600">Error: {error}</div>
       </div>
     );
-  }
-  return (
+  }  return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto space-y-8">
-        
-        <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+        {/* Header con notificaciones */}
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-gray-900">Mi Perfil</h1>
+          <NotificationCenter />
+        </div>
+          <Tabs defaultValue="profile" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="profile">Mi Perfil</TabsTrigger>
             <TabsTrigger value="posts">Mis Posts</TabsTrigger>
+            <TabsTrigger value="feed">Feed Público</TabsTrigger>
           </TabsList>
           
           <TabsContent value="profile" className="space-y-6">
@@ -173,9 +179,12 @@ const Profile: React.FC<ProfileProps> = ({ user }) => {
               </CardContent>
             </Card>
           </TabsContent>
-          
-          <TabsContent value="posts" className="space-y-6">
+            <TabsContent value="posts" className="space-y-6">
             <PostsComponent user={user} />
+          </TabsContent>
+          
+          <TabsContent value="feed" className="space-y-6">
+            <PublicFeed />
           </TabsContent>
         </Tabs>
       </div>

@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Trash2 } from 'lucide-react';
+import { FollowButton } from './FollowButton';
 import type { Post } from '../types/post';
 
 interface PostListProps {
@@ -54,16 +55,21 @@ export function PostList({ posts, onDeletePost, loading = false }: PostListProps
                   className="w-full h-64 object-cover rounded-lg border"
                 />
               </div>
-            )}
-            <p className="text-gray-700 whitespace-pre-wrap">{post.content}</p>
-            <div className="mt-4 text-sm text-gray-500">
-              Creado el {post.createdAt.toLocaleDateString('es-ES', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              })}
+            )}            <p className="text-gray-700 whitespace-pre-wrap">{post.content}</p>
+            <div className="mt-4 flex justify-between items-center">
+              <div className="text-sm text-gray-500">
+                Creado el {post.createdAt.toLocaleDateString('es-ES', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </div>
+              <FollowButton 
+                userId={post.authorUID} 
+                userName={post.authorEmail}
+              />
             </div>
           </CardContent>
         </Card>

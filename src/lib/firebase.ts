@@ -10,6 +10,7 @@ import {
   createUserWithEmailAndPassword
 } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getMessaging, isSupported } from "firebase/messaging";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDCjlpdK4G6TphXaNZM9XwrCaUImirWKkA",
@@ -25,12 +26,23 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// Initialize messaging only if supported (browser environment)
+let messaging: ReturnType<typeof getMessaging> | null = null;
+if (typeof window !== 'undefined') {
+  isSupported().then((supported) => {
+    if (supported) {
+      messaging = getMessaging(app);
+    }
+  });
+}
+
 const googleProvider = new GoogleAuthProvider();
 const facebookProvider = new FacebookAuthProvider();
 
 export { 
   auth,
   db,
+  messaging,
   googleProvider, 
   facebookProvider,
   linkWithPopup,
