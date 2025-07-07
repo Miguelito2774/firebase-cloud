@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Bell, X, User, Heart, MessageCircle, Plus } from 'lucide-react';
+import { Bell, X, User, Heart, MessageCircle, Plus, ThumbsDown, Shield } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -61,8 +61,12 @@ export function NotificationCenter() {
         return <User className="h-4 w-4 text-green-500" />;
       case 'like':
         return <Heart className="h-4 w-4 text-red-500" />;
+      case 'dislike':
+        return <ThumbsDown className="h-4 w-4 text-orange-500" />;
       case 'comment':
         return <MessageCircle className="h-4 w-4 text-purple-500" />;
+      case 'content_moderated':
+        return <Shield className="h-4 w-4 text-yellow-500" />;
       default:
         return <Bell className="h-4 w-4 text-gray-500" />;
     }

@@ -5,10 +5,14 @@ import {
   deleteDoc,
   getDocs,
   getDoc,
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
+  increment,
   query,
   where,
   orderBy,
-  serverTimestamp 
+  serverTimestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { StorageService } from './storageService';
@@ -37,17 +41,27 @@ export class PostRepository {
       authorUID,
       authorEmail,
       imageUrl,  
-      createdAt: serverTimestamp()
+      createdAt: serverTimestamp(),
+      likes: [],
+      dislikes: [],
+      likesCount: 0,
+      dislikesCount: 0
     };
 
-    const docRef = await addDoc(postsCollection, postToCreate);    return {
+    const docRef = await addDoc(postsCollection, postToCreate);    
+    
+    return {
       id: docRef.id,
       title: postData.title,
       content: postData.content,
       authorUID,
       authorEmail,
       imageUrl,
-      createdAt: new Date()
+      createdAt: new Date(),
+      likes: [],
+      dislikes: [],
+      likesCount: 0,
+      dislikesCount: 0
     };
   }
 
@@ -64,14 +78,19 @@ export class PostRepository {
       const posts: Post[] = [];
 
       querySnapshot.forEach((doc) => {
-        const data = doc.data();        posts.push({
+        const data = doc.data();        
+        posts.push({
           id: doc.id,
           title: data.title,
           content: data.content,
           authorUID: data.authorUID,
           authorEmail: data.authorEmail,
           imageUrl: data.imageUrl,
-          createdAt: data.createdAt?.toDate() || new Date()
+          createdAt: data.createdAt?.toDate() || new Date(),
+          likes: data.likes || [],
+          dislikes: data.dislikes || [],
+          likesCount: data.likesCount || 0,
+          dislikesCount: data.dislikesCount || 0
         });
       });
 
@@ -101,6 +120,107 @@ export class PostRepository {
     } catch (error) {
       console.error('Error deleting post:', error);
       throw error;
+    }
+  }
+
+  async toggleLike(postId: string, userId: string): Promise<void> {
+    const postRef = doc(db, this.collectionName, postId);
+    const postSnap = await getDoc(postRef);
+    
+    if (!postSnap.exists()) {
+      throw new Error('Post no encontrado');
+    }
+    
+    const postData = postSnap.data();
+    const likes = postData.likes || [];
+    const dislikes = postData.dislikes || [];
+    
+    const hasLiked = likes.includes(userId);
+    const hasDisliked = dislikes.includes(userId);
+    
+    if (hasLiked) {
+      // Quitar like
+      await updateDoc(postRef, {
+        likes: arrayRemove(userId),
+        likesCount: increment(-1)
+      });
+    } else {
+      // Agregar like y quitar dislike si existe
+      const updates = {
+        likes: arrayUnion(userId),
+        likesCount: increment(1),
+        ...(hasDisliked && {
+          dislikes: arrayRemove(userId),
+          dislikesCount: increment(-1)
+        })
+      };
+      
+      await updateDoc(postRef, updates);
+    }
+  }
+
+  async toggleDislike(postId: string, userId: string): Promise<void> {
+    const postRef = doc(db, this.collectionName, postId);
+    const postSnap = await getDoc(postRef);
+    
+    if (!postSnap.exists()) {
+      throw new Error('Post no encontrado');
+    }
+    
+    const postData = postSnap.data();
+    const likes = postData.likes || [];
+    const dislikes = postData.dislikes || [];
+    
+    const hasLiked = likes.includes(userId);
+    const hasDisliked = dislikes.includes(userId);
+    
+    if (hasDisliked) {
+      // Quitar dislike
+      await updateDoc(postRef, {
+        dislikes: arrayRemove(userId),
+        dislikesCount: increment(-1)
+      });
+    } else {
+      // Agregar dislike y quitar like si existe
+      const updates = {
+        dislikes: arrayUnion(userId),
+        dislikesCount: increment(1),
+        ...(hasLiked && {
+          likes: arrayRemove(userId),
+          likesCount: increment(-1)
+        })
+      };
+      
+      await updateDoc(postRef, updates);
+    }
+  }
+
+  async getPostById(postId: string): Promise<Post | null> {
+    try {
+      const postDoc = doc(db, this.collectionName, postId);
+      const postSnapshot = await getDoc(postDoc);
+      
+      if (!postSnapshot.exists()) {
+        return null;
+      }
+      
+      const data = postSnapshot.data();
+      return {
+        id: postSnapshot.id,
+        title: data.title,
+        content: data.content,
+        authorUID: data.authorUID,
+        authorEmail: data.authorEmail,
+        imageUrl: data.imageUrl,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        likes: data.likes || [],
+        dislikes: data.dislikes || [],
+        likesCount: data.likesCount || 0,
+        dislikesCount: data.dislikesCount || 0
+      };
+    } catch (error) {
+      console.error('Error getting post by id:', error);
+      return null;
     }
   }
 

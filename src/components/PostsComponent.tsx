@@ -10,7 +10,7 @@ interface PostsComponentProps {
 }
 
 export function PostsComponent({ user }: PostsComponentProps) {
-  const { posts, loading, error, createPost, deletePost } = usePosts(user);
+  const { posts, loading, error, createPost, deletePost, reloadPosts } = usePosts(user);
 
   return (
     <div className="space-y-6">
@@ -28,6 +28,7 @@ export function PostsComponent({ user }: PostsComponentProps) {
       <PostList
         posts={posts}
         onDeletePost={deletePost}
+        onPostUpdate={reloadPosts}
         loading={loading}
       />
     </div>

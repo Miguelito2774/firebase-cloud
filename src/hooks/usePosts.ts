@@ -38,9 +38,8 @@ export const usePosts = (user: User | null) => {
     try {
       setLoading(true);
       setError(null);      const newPost = await postRepository.createPost(user.uid, user.email, postData);
-      setPosts(prev => [newPost, ...prev]); // Agregar al inicio de la lista
+      setPosts(prev => [newPost, ...prev]); 
       
-      // Notificar a los seguidores sobre el nuevo post (solo una vez)
       console.log('🔔 Enviando notificaciones para nuevo post:', newPost.id);
       await notifyFollowers(
         'new_post',
@@ -110,6 +109,7 @@ export const usePosts = (user: User | null) => {
     error,
     createPost,
     deletePost,
-    refreshPosts: loadUserPosts
+    refreshPosts: loadUserPosts,
+    reloadPosts: loadUserPosts
   };
 };

@@ -17,7 +17,7 @@ export interface NotificationMessage {
   id?: string;
   recipientId: string;
   senderId: string;
-  type: 'new_post' | 'new_follower' | 'like' | 'comment';
+  type: 'new_post' | 'new_follower' | 'like' | 'dislike' | 'comment' | 'content_moderated';
   title: string;
   body: string;
   data?: Record<string, string | number | boolean>;

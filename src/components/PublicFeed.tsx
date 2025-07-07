@@ -5,6 +5,7 @@ import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { FollowButton } from './FollowButton';
+import { PostReactions } from './PostReactions';
 import type { Post } from '../types/post';
 
 interface PublicFeedProps {
@@ -40,7 +41,11 @@ export function PublicFeed({ className }: PublicFeedProps) {
             authorUID: data.authorUID,
             authorEmail: data.authorEmail,
             imageUrl: data.imageUrl,
-            createdAt: data.createdAt?.toDate() || new Date()
+            createdAt: data.createdAt?.toDate() || new Date(),
+            likes: data.likes || [],
+            dislikes: data.dislikes || [],
+            likesCount: data.likesCount || 0,
+            dislikesCount: data.dislikesCount || 0
           });
         });
         
@@ -116,6 +121,22 @@ export function PublicFeed({ className }: PublicFeedProps) {
               </div>
             )}
             <p className="text-gray-700 whitespace-pre-wrap">{post.content}</p>
+            
+            {/* Reacciones */}
+            <div className="mt-4 mb-4">
+              <PostReactions
+                postId={post.id!}
+                likes={post.likes || []}
+                dislikes={post.dislikes || []}
+                likesCount={post.likesCount || 0}
+                dislikesCount={post.dislikesCount || 0}
+                onReactionChange={() => {
+                  // Recargar posts del feed público
+                  window.location.reload();
+                }}
+              />
+            </div>
+            
             <div className="mt-4 text-sm text-gray-500">
               {post.createdAt.toLocaleDateString('es-ES', {
                 year: 'numeric',

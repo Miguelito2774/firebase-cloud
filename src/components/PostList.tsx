@@ -4,15 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Trash2 } from 'lucide-react';
 import { FollowButton } from './FollowButton';
+import { PostReactions } from './PostReactions';
 import type { Post } from '../types/post';
 
 interface PostListProps {
   posts: Post[];
   onDeletePost: (postId: string) => Promise<boolean>;
+  onPostUpdate?: () => void;
   loading?: boolean;
 }
 
-export function PostList({ posts, onDeletePost, loading = false }: PostListProps) {
+export function PostList({ posts, onDeletePost, onPostUpdate, loading = false }: PostListProps) {
   const handleDelete = async (postId: string) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este post?')) {
       await onDeletePost(postId);
@@ -45,7 +47,8 @@ export function PostList({ posts, onDeletePost, loading = false }: PostListProps
             >
               <Trash2 className="h-4 w-4" />
             </Button>
-          </CardHeader>          <CardContent>
+          </CardHeader>          
+          <CardContent>
             {post.imageUrl && (
               <div className="mb-4">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -55,8 +58,22 @@ export function PostList({ posts, onDeletePost, loading = false }: PostListProps
                   className="w-full h-64 object-cover rounded-lg border"
                 />
               </div>
-            )}            <p className="text-gray-700 whitespace-pre-wrap">{post.content}</p>
-            <div className="mt-4 flex justify-between items-center">
+            )}            
+            <p className="text-gray-700 whitespace-pre-wrap">{post.content}</p>
+            
+            {/* Reacciones */}
+            <div className="mt-4 mb-4">
+              <PostReactions
+                postId={post.id!}
+                likes={post.likes || []}
+                dislikes={post.dislikes || []}
+                likesCount={post.likesCount || 0}
+                dislikesCount={post.dislikesCount || 0}
+                onReactionChange={onPostUpdate}
+              />
+            </div>
+            
+            <div className="flex justify-between items-center">
               <div className="text-sm text-gray-500">
                 Creado el {post.createdAt.toLocaleDateString('es-ES', {
                   year: 'numeric',

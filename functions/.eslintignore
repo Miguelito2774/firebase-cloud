@@ -1,0 +1,4 @@
+# Ignore compiled JavaScript files
+lib/
+node_modules/
+.firebase/
